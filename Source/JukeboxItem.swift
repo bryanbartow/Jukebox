@@ -46,8 +46,19 @@ open class JukeboxItem: NSObject {
             let identifier: String
             var delegate: JukeboxItemDelegate?
     fileprivate var didLoad = false
-    open  var localTitle: String?
+    
     open  let URL: Foundation.URL
+    
+    /**
+     A Dictionary that overrides the comment meta data of the audio file. Use the following keys.
+     ````
+     "title": a value of String type.
+     "artist": a value of String type.
+     "album": title of the album, value of String type.
+     "artwork": a value of UIImage type.
+     ````
+     */
+    open var customMetaData: [String : Any]?
     
     fileprivate(set) open var playerItem: AVPlayerItem?
     fileprivate (set) open var currentTime: Double?
@@ -67,10 +78,11 @@ open class JukeboxItem: NSObject {
     
     - returns: JukeboxItem instance
     */
-    public required init(URL : Foundation.URL, localTitle : String? = nil) {
+    public required init(URL : Foundation.URL, customMetaData:[String : Any]? = nil) {
         self.URL = URL
         self.identifier = UUID().uuidString
-        self.localTitle = localTitle
+        self.customMetaData = customMetaData
+        
         super.init()
         configureMetadata()
     }

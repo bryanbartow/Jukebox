@@ -313,31 +313,58 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
     fileprivate func updateInfoCenter() {
         guard let item = currentItem else {return}
         
-        let title = (item.meta.title ?? item.localTitle) ?? item.URL.lastPathComponent
         let currentTime = item.currentTime ?? 0
         let duration = item.meta.duration ?? 0
         let trackNumber = playIndex
         let trackCount = queuedItems.count
         
+        var title = item.meta.title
+        var artist = item.meta.artist
+        var album = item.meta.album
+        var artwork = item.meta.artwork
+        
+        if let customMetaData = item.customMetaData {
+            
+            if let str = customMetaData["title"] as? String {
+                title = str
+            }
+            
+            if let str = customMetaData["artist"] as? String {
+                artist = str
+            }
+            
+            if let str = customMetaData["album"] as? String {
+                album = str
+            }
+            
+            if let img = customMetaData["artwork"] as? UIImage {
+                artwork = img
+            }
+        }
+        
+        
         var nowPlayingInfo : [String : AnyObject] = [
             MPMediaItemPropertyPlaybackDuration : duration as AnyObject,
-            MPMediaItemPropertyTitle : title as AnyObject,
             MPNowPlayingInfoPropertyElapsedPlaybackTime : currentTime as AnyObject,
             MPNowPlayingInfoPropertyPlaybackQueueCount :trackCount as AnyObject,
             MPNowPlayingInfoPropertyPlaybackQueueIndex : trackNumber as AnyObject,
             MPMediaItemPropertyMediaType : MPMediaType.anyAudio.rawValue as AnyObject
         ]
         
-        if let artist = item.meta.artist {
-            nowPlayingInfo[MPMediaItemPropertyArtist] = artist as AnyObject?
+        if title != nil {
+            nowPlayingInfo[MPMediaItemPropertyTitle] = title as AnyObject
         }
         
-        if let album = item.meta.album {
-            nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = album as AnyObject?
+        if artist != nil {
+            nowPlayingInfo[MPMediaItemPropertyArtist] = artist as AnyObject
         }
         
-        if let img = currentItem?.meta.artwork {
-            nowPlayingInfo[MPMediaItemPropertyArtwork] = MPMediaItemArtwork(image: img)
+        if album != nil {
+            nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = album as AnyObject
+        }
+        
+        if artwork != nil {
+            nowPlayingInfo[MPMediaItemPropertyArtwork] = MPMediaItemArtwork(image: artwork!)
         }
         
         MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
