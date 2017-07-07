@@ -343,24 +343,25 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
         }
         
         
-        var nowPlayingInfo : [String : AnyObject] = [
-            MPMediaItemPropertyPlaybackDuration : duration as AnyObject,
-            MPNowPlayingInfoPropertyElapsedPlaybackTime : currentTime as AnyObject,
-            MPNowPlayingInfoPropertyPlaybackQueueCount :trackCount as AnyObject,
-            MPNowPlayingInfoPropertyPlaybackQueueIndex : trackNumber as AnyObject,
-            MPMediaItemPropertyMediaType : MPMediaType.anyAudio.rawValue as AnyObject
+        var nowPlayingInfo : [String : Any] = [
+            MPMediaItemPropertyPlaybackDuration : duration,
+            MPNowPlayingInfoPropertyElapsedPlaybackTime : currentTime,
+            MPNowPlayingInfoPropertyPlaybackQueueCount :trackCount,
+            MPNowPlayingInfoPropertyPlaybackQueueIndex : trackNumber,
+            MPMediaItemPropertyMediaType : MPMediaType.anyAudio.rawValue,
+            MPNowPlayingInfoPropertyPlaybackRate: 1.0
         ]
         
         if title != nil {
-            nowPlayingInfo[MPMediaItemPropertyTitle] = title as AnyObject
+            nowPlayingInfo[MPMediaItemPropertyTitle] = title
         }
         
         if artist != nil {
-            nowPlayingInfo[MPMediaItemPropertyArtist] = artist as AnyObject
+            nowPlayingInfo[MPMediaItemPropertyArtist] = artist
         }
         
         if album != nil {
-            nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = album as AnyObject
+            nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = album
         }
         
         if artwork != nil {
