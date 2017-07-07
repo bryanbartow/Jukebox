@@ -71,16 +71,23 @@ open class JukeboxItem: NSObject {
     // MARK:- Initializer -
     
     /**
-    Create an instance with an URL and local title
-    
-    - parameter URL: local or remote URL of the audio file
-    - parameter localTitle: an optional title for the file
-    
+     Create an instance with an URL and local title.
+     
+    - parameters:
+        - URL: local or remote URL of the audio file.
+        - identifier: an optional unique id. If this is nil, uuidstring is used.
+        - customMetaData: key-value pairs for overriding the audio file common meta data.
     - returns: JukeboxItem instance
     */
-    public required init(URL : Foundation.URL, customMetaData:[String : Any]? = nil) {
+    public required init(URL : Foundation.URL, identifier: String? = nil, customMetaData:[String : Any]? = nil) {
         self.URL = URL
-        self.identifier = UUID().uuidString
+        
+        if identifier == nil {
+            self.identifier = UUID().uuidString
+        } else {
+            self.identifier = identifier!
+        }
+        
         self.customMetaData = customMetaData
         
         super.init()
