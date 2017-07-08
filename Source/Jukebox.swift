@@ -227,13 +227,13 @@ extension Jukebox {
             return
         }
         
-        if self.playIndex == from {
-            self.playIndex = to
-        }
-        
         let item = self.queuedItems.remove(at: from)
         
         self.queuedItems.insert(item, at: to)
+        
+        if self.playIndex == from {
+            self.playIndex = to
+        }
     }
     
     /**
