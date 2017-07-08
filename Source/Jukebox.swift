@@ -108,7 +108,19 @@ extension Jukebox {
      */
     public func playNext() {
         guard playerOperational else {return}
-        play(atIndex: playIndex + 1)
+        switch self.repeatMode {
+        case .off:
+            if playIndex >= queuedItems.count - 1 {
+                self.stop()
+            } else {
+                self.play(atIndex: playIndex + 1)
+            }
+        case .repeatOne:
+            self.play(atIndex: playIndex)
+        case .repeatAll:
+            let nextIndex = (self.playIndex + 1) % self.queuedItems.count
+            self.play(atIndex: nextIndex)
+        }
     }
     
     /**
@@ -116,7 +128,29 @@ extension Jukebox {
      */
     public func playPrevious() {
         guard playerOperational else {return}
-        play(atIndex: playIndex - 1)
+        
+        switch self.repeatMode {
+        case .off:
+            if playIndex <= 0 {
+                self.stop()
+            } else {
+                self.play(atIndex: playIndex - 1)
+            }
+        case .repeatOne:
+            self.play(atIndex: playIndex)
+        case .repeatAll:
+            
+            let count = self.queuedItems.count
+            
+            guard count > 0 else {
+                self.stop()
+                return
+            }
+            
+            let preIndex = (self.playIndex - 1 + count) % self.queuedItems.count
+            self.play(atIndex: preIndex)
+        }
+        
     }
     
     /**
@@ -179,6 +213,29 @@ extension Jukebox {
         }
     }
     
+    public func rearrangeItem(from: Int, to: Int) {
+        
+        if from == to {
+            return
+        }
+        
+        guard self.queuedItems.indices.contains(from) else {
+            return
+        }
+        
+        guard self.queuedItems.indices.contains(to) else {
+            return
+        }
+        
+        if self.playIndex == from {
+            self.playIndex = to
+        }
+        
+        let item = self.queuedItems.remove(at: from)
+        
+        self.queuedItems.insert(item, at: to)
+    }
+    
     /**
      Removes all items from the play queue matching the URL
      
@@ -224,6 +281,26 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
         }
     }
     
+    public enum RepeatMode: Int, CustomStringConvertible {
+        case off = 0
+        case repeatOne = 1
+        case repeatAll = 2
+        
+        public var description: String {
+            get{
+                switch self
+                {
+                case .off:
+                    return "off"
+                case .repeatOne:
+                    return "repeatOne"
+                case .repeatAll:
+                    return "repeatAll"
+                }
+            }
+        }
+    }
+    
     // MARK:- Properties -
     
     fileprivate var player                       :   AVPlayer?
@@ -238,6 +315,9 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
             delegate?.jukeboxStateDidChange(self)
         }
     }
+    
+    public var repeatMode: RepeatMode = .off
+    
     // MARK:  Computed
     
     open var volume: Float{
@@ -511,12 +591,8 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
         player?.play()
     }
     
-    func playerItemDidPlayToEnd(_ notification : Notification){
-        if playIndex >= queuedItems.count - 1 {
-            stop()
-        } else {
-            play(atIndex: playIndex + 1)
-        }
+    func playerItemDidPlayToEnd(_ notification : Notification) {
+        self.playNext()
     }
     
     func timerAction() {
