@@ -233,6 +233,14 @@ extension Jukebox {
         
         if self.playIndex == from {
             self.playIndex = to
+        } else if self.playIndex == to {
+            if from < self.playIndex {
+                self.playIndex -= 1
+            } else {
+                self.playIndex += 1
+            }
+        } else {
+            // no need to update playIndex
         }
     }
     
