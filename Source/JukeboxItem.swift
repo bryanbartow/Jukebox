@@ -41,10 +41,12 @@ open class JukeboxItem: NSObject {
         fileprivate(set) public var artwork: UIImage?
     }
     
-    // MARK:- Properties -
+    // MARK:- Properties
     
-            let identifier: String
-            var delegate: JukeboxItemDelegate?
+    public let identifier: String
+    
+    var delegate: JukeboxItemDelegate?
+    
     fileprivate var didLoad = false
     
     open  let URL: Foundation.URL
