@@ -168,6 +168,13 @@ extension Jukebox {
     */
     public func remove(item: JukeboxItem) {
         if let index = queuedItems.index(where: {$0.identifier == item.identifier}) {
+            
+            if index == self.playIndex {
+                self.stop()
+            } else if index < self.playIndex {
+                self.playIndex -= 1
+            }
+            
             queuedItems.remove(at: index)
         }
     }
