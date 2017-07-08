@@ -371,6 +371,8 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
         
         assignQueuedItems(items)
         configureObservers()
+        
+        self.setupNowPlayingInfoCenter()
     }
     
     deinit{
@@ -405,6 +407,37 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
     
     // MARK: Playback
     
+    private func setupNowPlayingInfoCenter() {
+        UIApplication.shared.beginReceivingRemoteControlEvents()
+        
+        MPRemoteCommandCenter.shared().playCommand.addTarget {
+            event in
+            
+            self.play()
+            return .success
+        }
+        
+        MPRemoteCommandCenter.shared().pauseCommand.addTarget {
+            event in
+            
+            self.pause()
+            self.updateInfoCenter()
+            return .success
+        }
+        MPRemoteCommandCenter.shared().nextTrackCommand.addTarget {
+            event in
+            
+            self.playNext()
+            return .success
+        }
+        MPRemoteCommandCenter.shared().previousTrackCommand.addTarget {
+            event in
+            
+            self.playPrevious()
+            return .success
+        }
+    }
+    
     fileprivate func updateInfoCenter() {
         guard let item = currentItem else {return}
         
@@ -437,6 +470,11 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
             }
         }
         
+        var playbackRate = 0.0
+        
+        if self.state == .playing {
+            playbackRate = 1.0
+        }
         
         var nowPlayingInfo : [String : Any] = [
             MPMediaItemPropertyPlaybackDuration : duration,
@@ -444,7 +482,7 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
             MPNowPlayingInfoPropertyPlaybackQueueCount :trackCount,
             MPNowPlayingInfoPropertyPlaybackQueueIndex : trackNumber,
             MPMediaItemPropertyMediaType : MPMediaType.anyAudio.rawValue,
-            MPNowPlayingInfoPropertyPlaybackRate: 1.0
+            MPNowPlayingInfoPropertyPlaybackRate: playbackRate
         ]
         
         if title != nil {
