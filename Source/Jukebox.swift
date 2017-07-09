@@ -81,6 +81,7 @@ extension Jukebox {
         stopProgressTimer()
         player?.pause()
         state = .paused
+        self.updateInfoCenter()
     }
     
     /**
@@ -91,6 +92,8 @@ extension Jukebox {
         state = .ready
         UIApplication.shared.endBackgroundTask(backgroundIdentifier)
         backgroundIdentifier = UIBackgroundTaskInvalid
+        
+        self.updateInfoCenter()
     }
     
     /**
@@ -421,7 +424,6 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
             event in
             
             self.pause()
-            self.updateInfoCenter()
             return .success
         }
         MPRemoteCommandCenter.shared().nextTrackCommand.addTarget {
