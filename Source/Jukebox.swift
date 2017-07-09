@@ -50,20 +50,23 @@ extension Jukebox {
      
      - parameter index: index of the item to be played
      */
-    public func play(atIndex index: Int) {
+    func play(atIndex index: Int) {
         guard index < queuedItems.count && index >= 0 else {return}
+        
+        playIndex = index
         
         configureBackgroundAudioTask()
         
-        if queuedItems[index].playerItem != nil && playIndex == index {
+        let trackNumber = self.trackNumber(at: index)
+        
+        if queuedItems[trackNumber].playerItem != nil && self.trackNumber() == trackNumber {
             resumePlayback()
         } else {
             if let item = currentItem?.playerItem {
                 unregisterForPlayToEndNotification(withItem: item)
             }
-            playIndex = index
             
-            if let asset = queuedItems[index].playerItem?.asset {
+            if let asset = queuedItems[trackNumber].playerItem?.asset {
                 playCurrentItem(withAsset: asset)
             } else {
                 loadPlaybackItem()
@@ -72,6 +75,27 @@ extension Jukebox {
             preloadNextAndPrevious(atIndex: playIndex)
         }
         updateInfoCenter()
+    }
+    
+    /**
+     Plays the item from the queue indicated by the passed track number.
+     - parameters 
+        - trackNumber: track number of the item to be played.
+     */
+    public func play(trackNumber: Int) {
+        
+        if self.isShuffled {
+            if let num = self.shuffleIndex.index(of: trackNumber) {
+                
+                let item = self.shuffleIndex.remove(at: num)
+                self.shuffleIndex.insert(item, at: 0)
+                self.playIndex = 0
+            }
+        } else {
+            self.playIndex = trackNumber
+        }
+        
+        self.play(atIndex: self.playIndex)
     }
     
     /**
@@ -191,8 +215,14 @@ extension Jukebox {
      - parameter loadingAssets:   pass true to load item's assets asynchronously
      */
     public func append(item: JukeboxItem, loadingAssets: Bool) {
+        
+        if self.shuffleIndex != nil {
+            self.shuffleIndex.append(queuedItems.count)
+        }
+        
         queuedItems.append(item)
         item.delegate = self
+        
         if loadingAssets {
             item.loadPlayerItem()
         }
@@ -312,7 +342,39 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
         }
     }
     
-    // MARK:- Properties -
+    // MARK:- Properties
+    
+    public var isShuffled: Bool = false {
+        
+        willSet {
+            
+            let shuffled = newValue
+            
+            if !shuffled {
+                if self.currentItem?.playerItem != nil {
+                    if self.queuedItems.count > 0 && self.shuffleIndex != nil {
+                        self.playIndex = self.shuffleIndex[self.playIndex]
+                    }
+                }
+            } else {
+                if self.shuffleIndex == nil && !self.queuedItems.isEmpty {
+                    self.shuffleIndex = Array(0..<self.queuedItems.count)
+                }
+                self.shuffleTrackNumber()
+                
+                if self.currentItem?.playerItem != nil {
+                    if let num = self.shuffleIndex.index(of: self.playIndex) {
+                        
+                        let item = self.shuffleIndex.remove(at: num)
+                        self.shuffleIndex.insert(item, at: 0)
+                        self.playIndex = 0
+                    }
+                }
+            }
+        }
+    }
+    
+    fileprivate var shuffleIndex: [Int]!
     
     fileprivate var player                       :   AVPlayer?
     fileprivate var progressObserver             :   AnyObject!
@@ -341,10 +403,14 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
     }
     
     open var currentItem: JukeboxItem? {
-        guard playIndex >= 0 && playIndex < queuedItems.count else {
+        
+        let trackNumber = self.trackNumber()
+        
+        guard self.queuedItems.indices.contains(trackNumber) else {
             return nil
         }
-        return queuedItems[playIndex]
+        
+        return queuedItems[trackNumber]
     }
     
     fileprivate var playerOperational: Bool {
@@ -380,6 +446,49 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
     
     deinit{
         NotificationCenter.default.removeObserver(self)
+    }
+    
+    // MARK: - Utilities
+    
+    /**
+     Return the track number with an assoicated playIndex. Track number is the index number of the queue items. When shuffle mode is off, this returns the `self.playIndex`. Otherwise, pre-generated track number, that is associated with the `index`, is returned.
+     - parameters:
+        - index: an optional associated integer for getting the track number. `self.playIndex` is used, if it's nil.
+     - returns: a track number.
+     */
+    public func trackNumber(at index: Int? = nil) -> Int {
+        
+        let index = index ?? self.playIndex
+        
+        guard self.queuedItems.indices.contains(index) else {
+            print("invalid index : \(index)")
+            return 0
+        }
+        
+        if self.isShuffled && self.shuffleIndex != nil {
+            return self.shuffleIndex[index]
+        } else {
+            return index
+        }
+    }
+    
+    func shuffleTrackNumber() {
+        
+        guard self.shuffleIndex != nil else {
+            return
+        }
+        
+        let count = self.shuffleIndex.count
+        
+        if count < 2 { return }
+        
+        let localCount:Int = Int(count.toIntMax())
+        
+        for i in 0 ..< localCount - 1 {
+            let j = Int(arc4random_uniform(UInt32(localCount - i))) + i
+            guard i != j else { continue }
+            swap(&self.shuffleIndex[i], &self.shuffleIndex[j])
+        }
     }
     
     // MARK:- JukeboxItemDelegate -
@@ -507,9 +616,12 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
     }
     
     fileprivate func playCurrentItem(withAsset asset: AVAsset) {
-        queuedItems[playIndex].refreshPlayerItem(withAsset: asset)
-        startNewPlayer(forItem: queuedItems[playIndex].playerItem!)
-        guard let playItem = queuedItems[playIndex].playerItem else {return}
+        
+        let trackNumber = self.trackNumber()
+        
+        queuedItems[trackNumber].refreshPlayerItem(withAsset: asset)
+        startNewPlayer(forItem: queuedItems[trackNumber].playerItem!)
+        guard let playItem = queuedItems[trackNumber].playerItem else {return}
         registerForPlayToEndNotification(withItem: playItem)
     }
     
@@ -561,7 +673,10 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
         
         stopProgressTimer()
         player?.pause()
-        queuedItems[playIndex].loadPlayerItem()
+        
+        let trackNumber = self.trackNumber()
+        
+        queuedItems[trackNumber].loadPlayerItem()
         state = .loading
     }
     
@@ -569,11 +684,13 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
         guard !queuedItems.isEmpty else {return}
         
         if index - 1 >= 0 {
-            queuedItems[index - 1].loadPlayerItem()
+            let trackNumber = self.trackNumber(at: index - 1)
+            queuedItems[trackNumber].loadPlayerItem()
         }
         
         if index + 1 < queuedItems.count {
-            queuedItems[index + 1].loadPlayerItem()
+            let trackNumber = self.trackNumber(at: index + 1)
+            queuedItems[trackNumber].loadPlayerItem()
         }
     }
     
