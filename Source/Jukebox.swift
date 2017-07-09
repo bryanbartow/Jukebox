@@ -53,8 +53,6 @@ extension Jukebox {
     func play(atIndex index: Int) {
         guard index < queuedItems.count && index >= 0 else {return}
         
-        playIndex = index
-        
         configureBackgroundAudioTask()
         
         let trackNumber = self.trackNumber(at: index)
@@ -65,6 +63,8 @@ extension Jukebox {
             if let item = currentItem?.playerItem {
                 unregisterForPlayToEndNotification(withItem: item)
             }
+            
+            playIndex = index
             
             if let asset = queuedItems[trackNumber].playerItem?.asset {
                 playCurrentItem(withAsset: asset)
@@ -84,18 +84,18 @@ extension Jukebox {
      */
     public func play(trackNumber: Int) {
         
+        var index = trackNumber
+        
         if self.isShuffled {
             if let num = self.shuffleIndex.index(of: trackNumber) {
                 
                 let item = self.shuffleIndex.remove(at: num)
                 self.shuffleIndex.insert(item, at: 0)
-                self.playIndex = 0
+                index = 0
             }
-        } else {
-            self.playIndex = trackNumber
         }
         
-        self.play(atIndex: self.playIndex)
+        self.play(atIndex: index)
     }
     
     /**
@@ -136,14 +136,12 @@ extension Jukebox {
     public func playNext() {
         guard playerOperational else {return}
         switch self.repeatMode {
-        case .off:
+        case .off, .repeatOne:
             if playIndex >= queuedItems.count - 1 {
                 self.stop()
             } else {
                 self.play(atIndex: playIndex + 1)
             }
-        case .repeatOne:
-            self.play(atIndex: playIndex)
         case .repeatAll:
             let nextIndex = (self.playIndex + 1) % self.queuedItems.count
             self.play(atIndex: nextIndex)
@@ -157,14 +155,12 @@ extension Jukebox {
         guard playerOperational else {return}
         
         switch self.repeatMode {
-        case .off:
+        case .off, .repeatOne:
             if playIndex <= 0 {
                 self.stop()
             } else {
                 self.play(atIndex: playIndex - 1)
             }
-        case .repeatOne:
-            self.play(atIndex: playIndex)
         case .repeatAll:
             
             let count = self.queuedItems.count
@@ -252,18 +248,22 @@ extension Jukebox {
             
             queuedItems.remove(at: trackNumber)
             
-            if item != nil && self.isShuffled {
+            if self.isShuffled {
                 if self.queuedItems.count > 0 {
                     self.shuffleIndex = Array(0..<self.queuedItems.count - 1)
                     self.shuffleTrackNumber()
                     
-                    if let trackNum = self.queuedItems.index(of: item!) {
-                        if let playIndexNum = self.shuffleIndex.index(of: trackNum) {
-                            let tmp = self.shuffleIndex.remove(at: playIndexNum)
-                            self.shuffleIndex.insert(tmp, at: 0)
-                            self.playIndex = 0
+                    if item != nil {
+                        if let trackNum = self.queuedItems.index(of: item!) {
+                            if let playIndexNum = self.shuffleIndex.index(of: trackNum) {
+                                let tmp = self.shuffleIndex.remove(at: playIndexNum)
+                                self.shuffleIndex.insert(tmp, at: 0)
+                                self.playIndex = 0
+                            }
                         }
                     }
+                } else {
+                    self.shuffleIndex = []
                 }
             }
         }
@@ -784,7 +784,11 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
     }
     
     func playerItemDidPlayToEnd(_ notification : Notification) {
-        self.playNext()
+        if self.repeatMode == .repeatOne {
+            self.replayCurrentItem()
+        } else {
+            self.playNext()
+        }
     }
     
     func timerAction() {
