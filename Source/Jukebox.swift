@@ -234,14 +234,49 @@ extension Jukebox {
     - parameter item: item to be removed
     */
     public func remove(item: JukeboxItem) {
-        if let index = queuedItems.index(where: {$0.identifier == item.identifier}) {
+        if let trackNumber = queuedItems.index(where: {$0.identifier == item.identifier}) {
             
-            if index == self.playIndex {
+            var item: JukeboxItem?
+            
+            if trackNumber == self.trackNumber() {
                 self.stop()
-            } else if index < self.playIndex {
-                self.playIndex -= 1
+            } else {
+                item = self.currentItem
             }
             
+            if !self.isShuffled {
+                if trackNumber < self.playIndex {
+                    self.playIndex -= 1
+                }
+            }
+            
+            queuedItems.remove(at: trackNumber)
+            
+            if item != nil && self.isShuffled {
+                if self.queuedItems.count > 0 {
+                    self.shuffleIndex = Array(0..<self.queuedItems.count - 1)
+                    self.shuffleTrackNumber()
+                    
+                    if let trackNum = self.queuedItems.index(of: item!) {
+                        if let playIndexNum = self.shuffleIndex.index(of: trackNum) {
+                            let tmp = self.shuffleIndex.remove(at: playIndexNum)
+                            self.shuffleIndex.insert(tmp, at: 0)
+                            self.playIndex = 0
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    /**
+     Removes all items from the play queue matching the URL
+     
+     - parameter url: the item URL
+     */
+    public func removeItems(withURL url : URL) {
+        let indexes = queuedItems.indexesOf({$0.URL as URL == url})
+        for index in indexes {
             queuedItems.remove(at: index)
         }
     }
@@ -274,18 +309,6 @@ extension Jukebox {
             }
         } else {
             // no need to update playIndex
-        }
-    }
-    
-    /**
-     Removes all items from the play queue matching the URL
-     
-     - parameter url: the item URL
-     */
-    public func removeItems(withURL url : URL) {
-        let indexes = queuedItems.indexesOf({$0.URL as URL == url})
-        for index in indexes {
-            queuedItems.remove(at: index)
         }
     }
 }
@@ -349,6 +372,10 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
         willSet {
             
             let shuffled = newValue
+            
+            if self.isShuffled == shuffled {
+                return
+            }
             
             if !shuffled {
                 if self.currentItem?.playerItem != nil {
