@@ -493,7 +493,14 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
         }
         
         if self.isShuffled && self.shuffleIndex != nil {
-            return self.shuffleIndex[index]
+            
+            let result = self.shuffleIndex[index]
+            
+            if self.queuedItems.indices.contains(result) {
+                return result
+            } else {
+                return Int(arc4random_uniform(UInt32(self.queuedItems.count)))
+            }
         } else {
             return index
         }
