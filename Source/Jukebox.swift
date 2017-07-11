@@ -34,6 +34,7 @@ public protocol JukeboxDelegate: class {
     func jukeboxDidUpdateMetadata(_ jukebox : Jukebox, forItem: JukeboxItem)
     func jukeboxDidBeginInterruption(_ jukebox: Jukebox)
     func jukeboxDidEndInterruption(_ jukebox: Jukebox)
+    func jukeboxAutoplayNext(_ jukebox:Jukebox, fromItem: JukeboxItem?, toItem: JukeboxItem?)
 }
 
 // MARK: - Public methods extension -
@@ -824,7 +825,18 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
         if self.repeatMode == .repeatOne {
             self.replayCurrentItem()
         } else {
+            let fromItem = self.currentItem
             self.playNext()
+            
+            // when jukebox is not stopped.
+            if self.state != .ready {
+                self.delegate?.jukeboxAutoplayNext(self, fromItem: fromItem, toItem: nil)
+            } else {
+                // if jukebox is playing next
+                let toItem = self.currentItem
+                self.delegate?.jukeboxAutoplayNext(self, fromItem: fromItem, toItem: toItem)
+            }
+            
         }
     }
     
