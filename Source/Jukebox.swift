@@ -117,6 +117,11 @@ extension Jukebox {
         UIApplication.shared.endBackgroundTask(backgroundIdentifier)
         backgroundIdentifier = UIBackgroundTaskInvalid
         
+        if self.queuedItems.count > 0 {
+            self.shuffleIndex = Array(0..<self.queuedItems.count)
+            self.shuffleTrackNumber()
+        }
+        
         self.updateInfoCenter()
     }
     
