@@ -120,6 +120,8 @@ extension Jukebox {
         if self.queuedItems.count > 0 {
             self.shuffleIndex = Array(0..<self.queuedItems.count)
             self.shuffleTrackNumber()
+        } else {
+            self.shuffleIndex = []
         }
         
         self.updateInfoCenter()
