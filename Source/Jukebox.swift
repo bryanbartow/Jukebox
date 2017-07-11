@@ -92,9 +92,12 @@ extension Jukebox {
         if self.isShuffled {
             if let num = self.shuffleIndex.index(of: trackNumber) {
                 
-                let item = self.shuffleIndex.remove(at: num)
-                self.shuffleIndex.insert(item, at: 0)
-                index = 0
+                if num != 0 && self.queuedItems.count > 1 {
+                    let item = self.shuffleIndex.remove(at: num)
+                    self.shuffleIndex.insert(item, at: 0)
+                    index = 0
+                    self.playIndex = 1
+                }
             }
         }
         
