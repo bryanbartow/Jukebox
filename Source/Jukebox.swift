@@ -411,7 +411,9 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
         }
         
         didSet {
-            self.preloadNextAndPrevious(atIndex: self.playIndex)
+            if self.isShuffled != oldValue {
+                self.preloadNextAndPrevious(atIndex: self.playIndex)
+            }
         }
     }
     
