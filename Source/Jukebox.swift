@@ -408,6 +408,10 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
                 }
             }
         }
+        
+        didSet {
+            self.preloadNextAndPrevious(atIndex: self.playIndex)
+        }
     }
     
     fileprivate var shuffleIndex: [Int]!
@@ -740,15 +744,16 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
     fileprivate func preloadNextAndPrevious(atIndex index: Int) {
         guard !queuedItems.isEmpty else {return}
         
-        if index - 1 >= 0 {
-            let trackNumber = self.trackNumber(at: index - 1)
-            queuedItems[trackNumber].loadPlayerItem()
-        }
+        let count = queuedItems.count
         
-        if index + 1 < queuedItems.count {
-            let trackNumber = self.trackNumber(at: index + 1)
-            queuedItems[trackNumber].loadPlayerItem()
-        }
+        let pre = (index - 1 + count) % count
+        let next = (index + 1) % count
+        
+        let preTrackNumber = self.trackNumber(at: pre)
+        let nextTrackNumber = self.trackNumber(at: next)
+        
+        queuedItems[preTrackNumber].loadPlayerItem()
+        queuedItems[nextTrackNumber].loadPlayerItem()
     }
     
     // MARK: Progress tracking
