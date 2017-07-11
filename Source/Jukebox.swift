@@ -847,15 +847,8 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
             let fromItem = self.currentItem
             self.playNext()
             
-            // when jukebox is not stopped.
-            if self.state != .ready {
-                self.delegate?.jukeboxAutoplayNext(self, fromItem: fromItem, toItem: nil)
-            } else {
-                // if jukebox is playing next
-                let toItem = self.currentItem
-                self.delegate?.jukeboxAutoplayNext(self, fromItem: fromItem, toItem: toItem)
-            }
-            
+            let toItem = self.currentItem
+            self.delegate?.jukeboxAutoplayNext(self, fromItem: fromItem, toItem: toItem)
         }
     }
     
