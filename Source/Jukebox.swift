@@ -32,6 +32,8 @@ public protocol JukeboxDelegate: class {
     func jukeboxPlaybackProgressDidChange(_ jukebox : Jukebox)
     func jukeboxDidLoadItem(_ jukebox : Jukebox, item : JukeboxItem)
     func jukeboxDidUpdateMetadata(_ jukebox : Jukebox, forItem: JukeboxItem)
+    func jukeboxDidBeginInterruption(_ jukebox: Jukebox)
+    func jukeboxDidEndInterruption(_ jukebox: Jukebox)
 }
 
 // MARK: - Public methods extension -
@@ -795,12 +797,14 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
 
         switch interruptionType {
         case .began: //interruption started
-            self.pause()
+            //self.pause()
+            self.delegate?.jukeboxDidBeginInterruption(self)
         case .ended: //interruption ended
             if let rawInterruptionOption = userInfo[AVAudioSessionInterruptionOptionKey] as? NSNumber {
                 let interruptionOption = AVAudioSessionInterruptionOptions(rawValue: rawInterruptionOption.uintValue)
                 if interruptionOption == AVAudioSessionInterruptionOptions.shouldResume {
-                    self.resumePlayback()
+                    //self.resumePlayback()
+                    self.delegate?.jukeboxDidEndInterruption(self)
                 }
             }
         }
