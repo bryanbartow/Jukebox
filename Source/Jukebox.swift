@@ -451,10 +451,10 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
     
     - parameter delegate: jukebox delegate
     - parameter items:    array of items to be added to the play queue
-    
+    - parameter nowPlayingSetup: listen to Now Playing Center commands, if true. Otherwise, false.
     - returns: Jukebox instance
     */
-    public required init?(delegate: JukeboxDelegate? = nil, items: [JukeboxItem] = [JukeboxItem]())  {
+    public required init?(delegate: JukeboxDelegate? = nil, items: [JukeboxItem] = [JukeboxItem](), nowPlayingSetup: Bool = false)  {
         self.delegate = delegate
         super.init()
         
@@ -468,7 +468,9 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
         assignQueuedItems(items)
         configureObservers()
         
-        self.setupNowPlayingInfoCenter()
+        if nowPlayingSetup {
+            self.setupNowPlayingInfoCenter()
+        }
     }
     
     deinit{
@@ -579,6 +581,18 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
             event in
             
             self.playPrevious()
+            return .success
+        }
+        
+        MPRemoteCommandCenter.shared().togglePlayPauseCommand.addTarget {
+            event in
+            
+            if self.state == .playing {
+                self.pause()
+            } else {
+                self.play()
+            }
+            
             return .success
         }
     }
