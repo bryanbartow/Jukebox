@@ -215,6 +215,23 @@ extension Jukebox {
     }
     
     /**
+     Seeks to a certain progress(from 0.0 to 1.0) within the current AVPlayerItem and starts playing
+     
+     - parameter progress: the progress to seek to
+     - parameter shouldPlay: pass true if playback should be resumed after seeking
+     */
+    public func seek(toProgress value: Float, shouldPlay: Bool = false) {
+        guard let item = currentItem else {return}
+        
+        if let duration = item.meta.duration {
+            if duration > 0 {
+                let second = Int(value * Float(duration))
+                self.seek(toSecond: second, shouldPlay: shouldPlay)
+            }
+        }
+    }
+    
+    /**
      Appends and optionally loads an item
      
      - parameter item:            the item to be appended to the play queue
