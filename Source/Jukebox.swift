@@ -464,12 +464,9 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
     
     // MARK:  Computed
     
-    open var volume: Float{
-        get {
-            return player?.volume ?? 0
-        }
-        set {
-            player?.volume = newValue
+    open var volume: Float = 0.5 {
+        didSet {
+            self.player?.volume = self.volume
         }
     }
     
@@ -744,6 +741,8 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
     fileprivate func startNewPlayer(forItem item : AVPlayerItem) {
         invalidatePlayback(shouldResetIndex: false)
         player = AVPlayer(playerItem: item)
+        
+        player?.volume = self.volume
         player?.allowsExternalPlayback = false
         startProgressTimer()
         seek(toSecond: 0, shouldPlay: true)
