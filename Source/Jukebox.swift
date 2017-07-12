@@ -61,6 +61,7 @@ extension Jukebox {
         let trackNumber = self.trackNumber(at: index)
         
         guard queuedItems.indices.contains(trackNumber) else {
+            self.updateInfoCenter()
             return
         }
         
@@ -649,7 +650,10 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
     }
     
     fileprivate func updateInfoCenter() {
-        guard let item = currentItem else {return}
+        guard let item = currentItem else {
+            MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
+            return
+        }
         
         let currentTime = item.currentTime ?? 0
         let duration = item.meta.duration ?? 0
