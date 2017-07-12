@@ -329,16 +329,19 @@ extension Jukebox {
         
         self.queuedItems.insert(item, at: to)
         
-        if self.playIndex == from {
-            self.playIndex = to
-        } else if self.playIndex == to {
-            if from < self.playIndex {
-                self.playIndex -= 1
+        // update playIndex if in a non-shuffle mode.
+        if !self.isShuffled {
+            if self.playIndex == from {
+                self.playIndex = to
+            } else if (from < playIndex && to < playIndex) || (from > playIndex && to > playIndex) {
+                // no need to update from movement involved only under/above current item
             } else {
-                self.playIndex += 1
+                if from < self.playIndex {
+                    self.playIndex -= 1
+                } else {
+                    self.playIndex += 1
+                }
             }
-        } else {
-            // no need to update playIndex
         }
     }
 }
