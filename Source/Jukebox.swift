@@ -60,6 +60,10 @@ extension Jukebox {
         
         let trackNumber = self.trackNumber(at: index)
         
+        guard trackNumber != -1 else {
+            return
+        }
+        
         if queuedItems[trackNumber].playerItem != nil && self.trackNumber() == trackNumber {
             resumePlayback()
         } else {
@@ -474,6 +478,10 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
         
         let trackNumber = self.trackNumber()
         
+        guard trackNumber != -1 else {
+            return nil
+        }
+        
         guard self.queuedItems.indices.contains(trackNumber) else {
             return nil
         }
@@ -532,10 +540,15 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
         
         guard self.queuedItems.indices.contains(index) else {
             print("invalid index : \(index)")
-            return 0
+            return -1
         }
         
         if self.isShuffled && self.shuffleIndex != nil {
+            
+            guard self.shuffleIndex.indices.contains(index) else {
+                print("invalid index : \(index)")
+                return -1
+            }
             
             let result = self.shuffleIndex[index]
             
@@ -709,6 +722,10 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
         
         let trackNumber = self.trackNumber()
         
+        guard queuedItems.indices.contains(trackNumber) else {
+            return
+        }
+        
         queuedItems[trackNumber].refreshPlayerItem(withAsset: asset)
         startNewPlayer(forItem: queuedItems[trackNumber].playerItem!)
         guard let playItem = queuedItems[trackNumber].playerItem else {return}
@@ -768,6 +785,10 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
         
         let trackNumber = self.trackNumber()
         
+        guard queuedItems.indices.contains(trackNumber) else {
+            return
+        }
+        
         queuedItems[trackNumber].loadPlayerItem()
         state = .loading
     }
@@ -783,8 +804,13 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
         let preTrackNumber = self.trackNumber(at: pre)
         let nextTrackNumber = self.trackNumber(at: next)
         
-        queuedItems[preTrackNumber].loadPlayerItem()
-        queuedItems[nextTrackNumber].loadPlayerItem()
+        if queuedItems.indices.contains(preTrackNumber) {
+            queuedItems[preTrackNumber].loadPlayerItem()
+        }
+        
+        if queuedItems.indices.contains(nextTrackNumber) {
+            queuedItems[nextTrackNumber].loadPlayerItem()
+        }
     }
     
     // MARK: Progress tracking
