@@ -414,11 +414,12 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
                     }
                 }
             } else {
-                if self.shuffleIndex == nil && !self.queuedItems.isEmpty {
-                    self.shuffleIndex = Array(0..<self.queuedItems.count)
-                } else {
+                if self.shuffleIndex == nil {
+                    
                     if self.queuedItems.isEmpty {
                         self.shuffleIndex = []
+                    } else {
+                        self.shuffleIndex = Array(0..<self.queuedItems.count)
                     }
                 }
                 self.shuffleTrackNumber()
