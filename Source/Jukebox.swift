@@ -416,6 +416,8 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
             } else {
                 if self.shuffleIndex == nil && !self.queuedItems.isEmpty {
                     self.shuffleIndex = Array(0..<self.queuedItems.count)
+                } else {
+                    self.shuffleIndex = []
                 }
                 self.shuffleTrackNumber()
                 
