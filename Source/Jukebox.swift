@@ -583,10 +583,11 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
     
     func jukeboxItemDidLoadPlayerItem(_ item: JukeboxItem) {
         delegate?.jukeboxDidLoadItem(self, item: item)
-        let index = queuedItems.index{$0 === item}
+        
+        let trackNumber = queuedItems.index{$0 === item}
         
         guard let playItem = item.playerItem
-            , state == .loading && playIndex == index else {return}
+            , state == .loading && self.trackNumber() == trackNumber else {return}
         
         registerForPlayToEndNotification(withItem: playItem)
         startNewPlayer(forItem: playItem)
