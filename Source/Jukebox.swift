@@ -60,7 +60,7 @@ extension Jukebox {
         
         let trackNumber = self.trackNumber(at: index)
         
-        guard trackNumber != -1 else {
+        guard queuedItems.indices.contains(trackNumber) else {
             return
         }
         
@@ -477,10 +477,6 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
     open var currentItem: JukeboxItem? {
         
         let trackNumber = self.trackNumber()
-        
-        guard trackNumber != -1 else {
-            return nil
-        }
         
         guard self.queuedItems.indices.contains(trackNumber) else {
             return nil
