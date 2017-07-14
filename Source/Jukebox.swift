@@ -35,6 +35,7 @@ public protocol JukeboxDelegate: class {
     func jukeboxDidBeginInterruption(_ jukebox: Jukebox)
     func jukeboxDidEndInterruption(_ jukebox: Jukebox)
     func jukeboxAutoplayNext(_ jukebox:Jukebox, fromItem: JukeboxItem?, toItem: JukeboxItem?)
+    func jukeboxDidStartNewPlayer(_ jukebox: Jukebox)
 }
 
 // MARK: - Public methods extension -
@@ -210,6 +211,17 @@ extension Jukebox {
      */
     public func seek(toSecond second: Int, shouldPlay: Bool = false) {
         guard let player = player, let item = currentItem else {return}
+        
+        var second = max(0, second)
+        
+        if let duration = item.meta.duration {
+            
+            let secInDouble = Double(second)
+            
+            if secInDouble > duration {
+                second = 0
+            }
+        }
         
         player.seek(to: CMTimeMake(Int64(second), 1))
         item.update()
@@ -600,7 +612,7 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
             , state == .loading && self.trackNumber() == trackNumber else {return}
         
         registerForPlayToEndNotification(withItem: playItem)
-        startNewPlayer(forItem: playItem)
+        startNewPlayer(forItem: item)
     }
     
     // MARK:- Private methods -
@@ -727,7 +739,7 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
         }
         
         queuedItems[trackNumber].refreshPlayerItem(withAsset: asset)
-        startNewPlayer(forItem: queuedItems[trackNumber].playerItem!)
+        startNewPlayer(forItem: queuedItems[trackNumber])
         guard let playItem = queuedItems[trackNumber].playerItem else {return}
         registerForPlayToEndNotification(withItem: playItem)
     }
@@ -739,7 +751,7 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
                 player.play()
             } else {
                 currentItem!.refreshPlayerItem(withAsset: currentItem!.playerItem!.asset)
-                startNewPlayer(forItem: currentItem!.playerItem!)
+                startNewPlayer(forItem: currentItem!)
             }
             state = .playing
         }
@@ -755,14 +767,23 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
         }
     }
     
-    fileprivate func startNewPlayer(forItem item : AVPlayerItem) {
+    fileprivate func startNewPlayer(forItem jukeboxItem : JukeboxItem) {
+        
+        guard let item = jukeboxItem.playerItem else {
+            return
+        }
+        
         invalidatePlayback(shouldResetIndex: false)
         player = AVPlayer(playerItem: item)
         
-        player?.volume = self.volume
+        self.volume = jukeboxItem.adjustedVolume
+        
         player?.allowsExternalPlayback = false
         startProgressTimer()
-        seek(toSecond: 0, shouldPlay: true)
+        seek(toSecond: jukeboxItem.startTime, shouldPlay: true)
+        
+        self.delegate?.jukeboxDidStartNewPlayer(self)
+        
         updateInfoCenter()
     }
     

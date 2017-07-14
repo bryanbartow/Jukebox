@@ -45,6 +45,9 @@ open class JukeboxItem: NSObject {
     
     public let identifier: String
     
+    public var startTime: Int = 0
+    public var adjustedVolume: Float = 0.5
+    
     var delegate: JukeboxItemDelegate?
     
     fileprivate var didLoad = false
