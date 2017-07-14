@@ -538,6 +538,21 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
     // MARK: - Utilities
     
     /**
+     Get the item of the given identifier, if Jukebox has it.
+     
+     - parameters:
+        - identifier: id of the item.
+     - returns: nil, if no such item in the queue. Otherwise, return the wanted item.
+     */
+    public func item(ofIdentifier identifier: String) -> JukeboxItem? {
+        if let num = self.queuedItems.index(where: {$0.identifier == identifier}) {
+            return self.queuedItems[num]
+        }
+        
+        return nil
+    }
+    
+    /**
      Return the track number with an assoicated playIndex. Track number is the index number of the queue items. When shuffle mode is off, this returns the `self.playIndex`. Otherwise, pre-generated track number, that is associated with the `index`, is returned.
      - parameters:
         - index: an optional associated integer for getting the track number. `self.playIndex` is used, if it's nil.
@@ -694,6 +709,10 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
             if let img = customMetaData["artwork"] as? UIImage {
                 artwork = img
             }
+        }
+        
+        if let customTitle = item.customTitle, !customTitle.isEmpty {
+            title = customTitle
         }
         
         var playbackRate = 0.0

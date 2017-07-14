@@ -45,8 +45,20 @@ open class JukeboxItem: NSObject {
     
     public let identifier: String
     
+    /**
+     The starting time on playing.
+     */
     public var startTime: Int = 0
+    
+    /**
+     The adjusted volume for this item. Between 0.0 to 1.0
+     */
     public var adjustedVolume: Float = 0.5
+    
+    /**
+     The custom title. If this is non-nil and non-empty, it will override the meta data title for now playing center.
+     */
+    public var customTitle: String?
     
     var delegate: JukeboxItemDelegate?
     
