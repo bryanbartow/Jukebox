@@ -200,7 +200,10 @@ extension Jukebox {
      */
     public func replayCurrentItem() {
         guard playerOperational else {return}
-        seek(toSecond: 0, shouldPlay: true)
+        
+        let sec = self.currentItem?.startTime ?? 0
+        
+        seek(toSecond: sec, shouldPlay: true)
     }
     
     /**
