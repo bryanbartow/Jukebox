@@ -802,7 +802,11 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
         
         player?.allowsExternalPlayback = false
         startProgressTimer()
-        seek(toSecond: jukeboxItem.startTime, shouldPlay: true)
+        
+        let startTime = jukeboxItem.continueTime ?? jukeboxItem.startTime
+        jukeboxItem.continueTime = nil
+        
+        seek(toSecond: startTime, shouldPlay: true)
         
         self.delegate?.jukeboxDidStartNewPlayer(self)
         

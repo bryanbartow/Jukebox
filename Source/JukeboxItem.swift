@@ -51,6 +51,11 @@ open class JukeboxItem: NSObject {
     public var startTime: Int = 0
     
     /**
+     If this is non-nil, item plays at this time. Takes precedence over `startTime`.
+    */
+    public var continueTime: Int?
+    
+    /**
      The adjusted volume for this item. Between 0.0 to 1.0
      */
     public var adjustedVolume: Float = 0.5
