@@ -212,7 +212,7 @@ extension Jukebox {
      - parameter second: the second to seek to
      - parameter shouldPlay: pass true if playback should be resumed after seeking
      */
-    public func seek(toSecond second: Int, shouldPlay: Bool = false) {
+    public func seek(toSecond second: Double, shouldPlay: Bool = false) {
         guard let player = player, let item = currentItem else {return}
         
         var second = max(0, second)
@@ -226,7 +226,8 @@ extension Jukebox {
             }
         }
         
-        player.seek(to: CMTimeMake(Int64(second), 1))
+        
+        player.seek(to:  CMTime(seconds: second, preferredTimescale: 1))
         item.update()
         if shouldPlay {
             player.play()
@@ -248,7 +249,7 @@ extension Jukebox {
         
         if let duration = item.meta.duration {
             if duration > 0 {
-                let second = Int(value * Float(duration))
+                let second = Double(value) * duration
                 self.seek(toSecond: second, shouldPlay: shouldPlay)
             }
         }
@@ -803,8 +804,15 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
         player?.allowsExternalPlayback = false
         startProgressTimer()
         
-        let startTime = jukeboxItem.continueTime ?? jukeboxItem.startTime
+        var startTime = jukeboxItem.continueTime ?? jukeboxItem.startTime
         jukeboxItem.continueTime = nil
+        
+        let duration = item.asset.duration.seconds
+        
+        // set start time to zero, if it is too close to end time.
+        if duration < startTime + 1.5 {
+            startTime = 0.0
+        }
         
         seek(toSecond: startTime, shouldPlay: true)
         
