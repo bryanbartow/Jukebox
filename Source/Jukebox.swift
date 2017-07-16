@@ -196,12 +196,19 @@ extension Jukebox {
     }
     
     /**
-     Restarts the playback for the current item
+     Restarts the playback for the current item.
+     
+     - parameters:
+        - fromStart: If true, start playing from 0. Otherwise, start from `startTime`
      */
-    public func replayCurrentItem() {
+    public func replayCurrentItem(fromStart: Bool) {
         guard playerOperational else {return}
         
-        let sec = self.currentItem?.startTime ?? 0
+        var sec = self.currentItem?.startTime ?? 0
+        
+        if fromStart {
+            sec = 0
+        }
         
         seek(toSecond: sec, shouldPlay: true)
     }
@@ -934,7 +941,7 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
     
     func playerItemDidPlayToEnd(_ notification : Notification) {
         if self.repeatMode == .repeatOne {
-            self.replayCurrentItem()
+            self.replayCurrentItem(fromStart: false)
         } else {
             let fromItem = self.currentItem
             self.playNext()
