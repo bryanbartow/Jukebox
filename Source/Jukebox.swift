@@ -687,7 +687,7 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
         }
     }
     
-    fileprivate func updateInfoCenter() {
+    public func updateInfoCenter() {
         guard let item = currentItem else {
             MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
             return
