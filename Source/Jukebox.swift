@@ -603,16 +603,15 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
             return
         }
         
-        let count = self.shuffleIndex.count
+        let c = self.shuffleIndex.count
         
-        if count < 2 { return }
+        guard c > 1 else { return }
         
-        let localCount:Int = count
-        
-        for i in 0 ..< localCount - 1 {
-            let j = Int(arc4random_uniform(UInt32(localCount - i))) + i
-            guard i != j else { continue }
-            swap(&self.shuffleIndex[i], &self.shuffleIndex[j])
+        for (firstUnshuffled, unshuffledCount) in zip(self.shuffleIndex.indices, stride(from: c, to: 1, by: -1)) {
+            // Change `Int` in the next line to `IndexDistance` in < Swift 4.1
+            let d: Int = numericCast(arc4random_uniform(numericCast(unshuffledCount)))
+            let i = self.shuffleIndex.index(firstUnshuffled, offsetBy: d)
+            self.shuffleIndex.swapAt(firstUnshuffled, i)
         }
     }
     
