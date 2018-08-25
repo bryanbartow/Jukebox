@@ -607,7 +607,7 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
         
         if count < 2 { return }
         
-        let localCount:Int = Int(count.toIntMax())
+        let localCount:Int = count
         
         for i in 0 ..< localCount - 1 {
             let j = Int(arc4random_uniform(UInt32(localCount - i))) + i
@@ -881,7 +881,7 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
         guard let player = player , player.currentItem?.duration.isValid == true else {return}
         progressObserver = player.addPeriodicTimeObserver(forInterval: CMTimeMakeWithSeconds(0.05, Int32(NSEC_PER_SEC)), queue: nil, using: { [unowned self] (time : CMTime) -> Void in
             self.timerAction()
-        }) as AnyObject!
+        }) as AnyObject
     }
     
     fileprivate func stopProgressTimer() {
@@ -914,7 +914,7 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
     
     // MARK:- Notifications -
     
-    func handleAudioSessionInterruption(_ notification : Notification) {
+    @objc func handleAudioSessionInterruption(_ notification : Notification) {
         guard let userInfo = notification.userInfo as? [String: AnyObject] else { return }
         guard let rawInterruptionType = userInfo[AVAudioSessionInterruptionTypeKey] as? NSNumber else { return }
         guard let interruptionType = AVAudioSessionInterruptionType(rawValue: rawInterruptionType.uintValue) else { return }
@@ -934,12 +934,12 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
         }
     }
     
-    func handleStall() {
+    @objc func handleStall() {
         player?.pause()
         player?.play()
     }
     
-    func playerItemDidPlayToEnd(_ notification : Notification) {
+    @objc func playerItemDidPlayToEnd(_ notification : Notification) {
         if self.repeatMode == .repeatOne {
             self.replayCurrentItem(fromStart: false)
         } else {
