@@ -69,7 +69,7 @@ open class JukeboxItem: NSObject {
     
     fileprivate var didLoad = false
     
-    open  let URL: Foundation.URL
+    public  let URL: Foundation.URL
     
     /**
      A Dictionary that overrides the comment meta data of the audio file. Use the following keys.
