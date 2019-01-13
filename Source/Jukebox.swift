@@ -690,13 +690,17 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
         if #available(iOS 9.1, *) {
           MPRemoteCommandCenter.shared().changePlaybackPositionCommand.addTarget {
             [weak self] event in
+            
+            var success = true
             if let changeEvent = event as? MPChangePlaybackPositionCommandEvent {
               DispatchQueue.main.async {
                 self?.seek(toSecond: Double(changeEvent.positionTime), shouldPlay: true)
               }
+            } else {
+              success = false
             }
             
-            return .success
+            return success ? .success : .commandFailed
           }
         }
       }
