@@ -244,7 +244,6 @@ extension Jukebox {
         }
       
         delegate?.jukeboxPlaybackProgressDidChange(self)
-      self.updateInfoCenter()
     }
     
     /**
