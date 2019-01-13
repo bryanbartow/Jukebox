@@ -127,7 +127,7 @@ extension Jukebox {
         invalidatePlayback()
         state = .ready
         UIApplication.shared.endBackgroundTask(backgroundIdentifier)
-        backgroundIdentifier = UIBackgroundTaskIdentifier.invalid
+        backgroundIdentifier = UIBackgroundTaskInvalid
         
         if self.queuedItems.count > 0 {
             self.shuffleIndex = Array(0..<self.queuedItems.count)
@@ -479,7 +479,7 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
     
     fileprivate var player                       :   AVPlayer?
     fileprivate var progressObserver             :   AnyObject!
-    fileprivate var backgroundIdentifier         =   UIBackgroundTaskIdentifier.invalid
+    fileprivate var backgroundIdentifier         =   UIBackgroundTaskInvalid
     fileprivate(set) open weak var delegate    :   JukeboxDelegate?
     
     fileprivate (set) open var playIndex       =   0
@@ -894,10 +894,10 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
     // MARK: Progress tracking
     
     fileprivate func startProgressTimer(){
-        guard let player = player , player.currentItem?.duration.isValid == true else {return}
-        progressObserver = player.addPeriodicTimeObserver(forInterval: CMTimeMakeWithSeconds(0.05, preferredTimescale: Int32(NSEC_PER_SEC)), queue: nil, using: { [unowned self] (time : CMTime) -> Void in
-            self.timerAction()
-        }) as AnyObject
+      guard let player = player , player.currentItem?.duration.isValid == true else {return}
+      progressObserver = player.addPeriodicTimeObserver(forInterval: CMTimeMakeWithSeconds(0.05, Int32(NSEC_PER_SEC)), queue: nil, using: { [unowned self] (time : CMTime) -> Void in
+        self.timerAction()
+      }) as AnyObject
     }
     
     fileprivate func stopProgressTimer() {
@@ -913,24 +913,19 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
     fileprivate func configureBackgroundAudioTask() {
         backgroundIdentifier =  UIApplication.shared.beginBackgroundTask (expirationHandler: { () -> Void in
             UIApplication.shared.endBackgroundTask(self.backgroundIdentifier)
-            self.backgroundIdentifier = UIBackgroundTaskIdentifier.invalid
+            self.backgroundIdentifier = UIBackgroundTaskInvalid
         })
     }
     
     fileprivate func configureAudioSession() throws {
-        if #available(iOS 10.0, *) {
-            try AVAudioSession.sharedInstance().setCategory(AVAudioSession.Category.playback, mode: .default)
-        } else {
-            // Fallback on earlier versions
-            AVAudioSession.sharedInstance().perform(NSSelectorFromString("setCategory:error:"), with: AVAudioSession.Category.playback)
-            try AVAudioSession.sharedInstance().setMode(AVAudioSession.Mode.default)
-        }
-        try AVAudioSession.sharedInstance().setActive(true)
+      try AVAudioSession.sharedInstance().setCategory(AVAudioSessionCategoryPlayback)
+      try AVAudioSession.sharedInstance().setMode(AVAudioSessionModeDefault)
+      try AVAudioSession.sharedInstance().setActive(true)
     }
     
     fileprivate func configureObservers() {
-        NotificationCenter.default.addObserver(self, selector: #selector(Jukebox.handleStall), name: NSNotification.Name.AVPlayerItemPlaybackStalled, object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(handleAudioSessionInterruption), name: AVAudioSession.interruptionNotification, object: AVAudioSession.sharedInstance())
+      NotificationCenter.default.addObserver(self, selector: #selector(Jukebox.handleStall), name: NSNotification.Name.AVPlayerItemPlaybackStalled, object: nil)
+      NotificationCenter.default.addObserver(self, selector: #selector(handleAudioSessionInterruption), name: NSNotification.Name.AVAudioSessionInterruption, object: AVAudioSession.sharedInstance())
     }
     
     // MARK:- Notifications -
