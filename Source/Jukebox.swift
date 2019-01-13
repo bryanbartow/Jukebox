@@ -242,7 +242,9 @@ extension Jukebox {
                 state = .playing
             }
         }
+      
         delegate?.jukeboxPlaybackProgressDidChange(self)
+      
     }
     
     /**
@@ -645,45 +647,58 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
     // MARK: Playback
     
     private func setupNowPlayingInfoCenter() {
+      DispatchQueue.main.async {
         UIApplication.shared.beginReceivingRemoteControlEvents()
         
         MPRemoteCommandCenter.shared().playCommand.addTarget {
-            event in
-            
-            self.play()
-            return .success
+          [weak self] event in
+          
+          self?.play()
+          return .success
         }
         
         MPRemoteCommandCenter.shared().pauseCommand.addTarget {
-            event in
-            
-            self.pause()
-            return .success
+          [weak self] event in
+          
+          self?.pause()
+          return .success
         }
         MPRemoteCommandCenter.shared().nextTrackCommand.addTarget {
-            event in
-            
-            self.playNext()
-            return .success
+          [weak self] event in
+          
+          self?.playNext()
+          return .success
         }
         MPRemoteCommandCenter.shared().previousTrackCommand.addTarget {
-            event in
-            
-            self.playPrevious()
-            return .success
+          [weak self] event in
+          
+          self?.playPrevious()
+          return .success
         }
         
         MPRemoteCommandCenter.shared().togglePlayPauseCommand.addTarget {
-            event in
-            
-            if self.state == .playing {
-                self.pause()
-            } else {
-                self.play()
-            }
-            
-            return .success
+          [weak self] event in
+          
+          if self?.state == .playing {
+            self?.pause()
+          } else {
+            self?.play()
+          }
+          
+          return .success
         }
+        
+        MPRemoteCommandCenter.shared().changePlaybackPositionCommand.addTarget {
+          [weak self] event in
+          if let changeEvent = event as? MPChangePlaybackPositionCommandEvent {
+            DispatchQueue.main.async {
+              self?.seek(toSecond: Double(changeEvent.positionTime), shouldPlay: true)
+            }
+          }
+          
+          return .success
+        }
+      }
     }
     
     public func updateInfoCenter() {
@@ -692,10 +707,11 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
             return
         }
         
+      DispatchQueue.main.async { [weak self] in
         let currentTime = item.currentTime ?? 0
         let duration = item.meta.duration ?? 0
-        let trackNumber = playIndex
-        let trackCount = queuedItems.count
+        let trackNumber = self?.playIndex
+        let trackCount = self?.queuedItems.count
         
         var title = item.meta.title
         var artist = item.meta.artist
@@ -703,60 +719,61 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
         var artwork = item.meta.artwork
         
         if let customMetaData = item.customMetaData {
-            
-            if let str = customMetaData["title"] as? String {
-                title = str
-            }
-            
-            if let str = customMetaData["artist"] as? String {
-                artist = str
-            }
-            
-            if let str = customMetaData["album"] as? String {
-                album = str
-            }
-            
-            if let img = customMetaData["artwork"] as? UIImage {
-                artwork = img
-            }
+          
+          if let str = customMetaData["title"] as? String {
+            title = str
+          }
+          
+          if let str = customMetaData["artist"] as? String {
+            artist = str
+          }
+          
+          if let str = customMetaData["album"] as? String {
+            album = str
+          }
+          
+          if let img = customMetaData["artwork"] as? UIImage {
+            artwork = img
+          }
         }
         
         if let customTitle = item.customTitle, !customTitle.isEmpty {
-            title = customTitle
+          title = customTitle
         }
         
         var playbackRate = 0.0
         
-        if self.state == .playing {
-            playbackRate = 1.0
+        if self?.state == .playing {
+          playbackRate = 1.0
         }
         
         var nowPlayingInfo : [String : Any] = [
-            MPMediaItemPropertyPlaybackDuration : duration,
-            MPNowPlayingInfoPropertyElapsedPlaybackTime : currentTime,
-            MPNowPlayingInfoPropertyPlaybackQueueCount :trackCount,
-            MPNowPlayingInfoPropertyPlaybackQueueIndex : trackNumber,
-            MPMediaItemPropertyMediaType : MPMediaType.anyAudio.rawValue,
-            MPNowPlayingInfoPropertyPlaybackRate: playbackRate
+          MPMediaItemPropertyPlaybackDuration : duration,
+          MPNowPlayingInfoPropertyElapsedPlaybackTime : currentTime,
+          MPNowPlayingInfoPropertyPlaybackQueueCount :trackCount,
+          MPNowPlayingInfoPropertyPlaybackQueueIndex : trackNumber,
+          MPMediaItemPropertyMediaType : MPMediaType.anyAudio.rawValue,
+          MPNowPlayingInfoPropertyPlaybackRate: playbackRate
         ]
         
         if title != nil {
-            nowPlayingInfo[MPMediaItemPropertyTitle] = title
+          nowPlayingInfo[MPMediaItemPropertyTitle] = title
         }
         
         if artist != nil {
-            nowPlayingInfo[MPMediaItemPropertyArtist] = artist
+          nowPlayingInfo[MPMediaItemPropertyArtist] = artist
         }
         
         if album != nil {
-            nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = album
+          nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = album
         }
         
         if artwork != nil {
-            nowPlayingInfo[MPMediaItemPropertyArtwork] = MPMediaItemArtwork(image: artwork!)
+          nowPlayingInfo[MPMediaItemPropertyArtwork] = MPMediaItemArtwork(image: artwork!)
         }
         
         MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
+      }
     }
     
     fileprivate func playCurrentItem(withAsset asset: AVAsset) {
