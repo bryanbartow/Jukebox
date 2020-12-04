@@ -89,14 +89,14 @@ extension Jukebox {
     /**
      Plays the item from the queue indicated by the passed track number.
      - parameters 
-        - trackNumber: track number of the item to be played.
+     - trackNumber: track number of the item to be played.
      */
     public func play(trackNumber: Int) {
         
         var index = trackNumber
         
         if self.isShuffled {
-            if let num = self.shuffleIndex.index(of: trackNumber) {
+            if let num = self.shuffleIndex.firstIndex(of: trackNumber) {
                 
                 if num != 0 && self.queuedItems.count > 1 {
                     let item = self.shuffleIndex.remove(at: num)
@@ -127,7 +127,7 @@ extension Jukebox {
         invalidatePlayback()
         state = .ready
         UIApplication.shared.endBackgroundTask(backgroundIdentifier)
-        backgroundIdentifier = UIBackgroundTaskInvalid
+        backgroundIdentifier = UIBackgroundTaskIdentifier.invalid
         
         if self.queuedItems.count > 0 {
             self.shuffleIndex = Array(0..<self.queuedItems.count)
@@ -199,7 +199,7 @@ extension Jukebox {
      Restarts the playback for the current item.
      
      - parameters:
-        - fromStart: If true, start playing from 0. Otherwise, start from `startTime`
+     - fromStart: If true, start playing from 0. Otherwise, start from `startTime`
      */
     public func replayCurrentItem(fromStart: Bool) {
         guard playerOperational else {return}
@@ -242,11 +242,11 @@ extension Jukebox {
                 state = .playing
             }
         }
-      
+        
         delegate?.jukeboxPlaybackProgressDidChange(self)
-      DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
-        self?.updateInfoCenter()
-      }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+            self?.updateInfoCenter()
+        }
     }
     
     /**
@@ -285,14 +285,14 @@ extension Jukebox {
             item.loadPlayerItem()
         }
     }
-
-    /**
-    Removes an item from the play queue
     
-    - parameter item: item to be removed
-    */
+    /**
+     Removes an item from the play queue
+     
+     - parameter item: item to be removed
+     */
     public func remove(item: JukeboxItem) {
-        if let trackNumber = queuedItems.index(where: {$0.identifier == item.identifier}) {
+        if let trackNumber = queuedItems.firstIndex(where: {$0.identifier == item.identifier}) {
             
             var item: JukeboxItem?
             
@@ -316,8 +316,8 @@ extension Jukebox {
                     self.shuffleTrackNumber()
                     
                     if item != nil {
-                        if let trackNum = self.queuedItems.index(of: item!) {
-                            if let playIndexNum = self.shuffleIndex.index(of: trackNum) {
+                        if let trackNum = self.queuedItems.firstIndex(of: item!) {
+                            if let playIndexNum = self.shuffleIndex.firstIndex(of: trackNum) {
                                 let tmp = self.shuffleIndex.remove(at: playIndexNum)
                                 self.shuffleIndex.insert(tmp, at: 0)
                                 self.playIndex = 0
@@ -460,7 +460,7 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
                 self.shuffleTrackNumber()
                 
                 if self.currentItem?.playerItem != nil {
-                    if let num = self.shuffleIndex.index(of: self.playIndex) {
+                    if let num = self.shuffleIndex.firstIndex(of: self.playIndex) {
                         
                         let item = self.shuffleIndex.remove(at: num)
                         self.shuffleIndex.insert(item, at: 0)
@@ -481,7 +481,7 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
     
     fileprivate var player                       :   AVPlayer?
     fileprivate var progressObserver             :   AnyObject!
-    fileprivate var backgroundIdentifier         =   UIBackgroundTaskInvalid
+    fileprivate var backgroundIdentifier         =   UIBackgroundTaskIdentifier.invalid
     fileprivate(set) open weak var delegate    :   JukeboxDelegate?
     
     fileprivate (set) open var playIndex       =   0
@@ -520,13 +520,13 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
     // MARK:- Initializer -
     
     /**
-    Create an instance with a delegate and a list of items without loading their assets.
-    
-    - parameter delegate: jukebox delegate
-    - parameter items:    array of items to be added to the play queue
-    - parameter nowPlayingSetup: listen to Now Playing Center commands, if true. Otherwise, false.
-    - returns: Jukebox instance
-    */
+     Create an instance with a delegate and a list of items without loading their assets.
+     
+     - parameter delegate: jukebox delegate
+     - parameter items:    array of items to be added to the play queue
+     - parameter nowPlayingSetup: listen to Now Playing Center commands, if true. Otherwise, false.
+     - returns: Jukebox instance
+     */
     public required init?(delegate: JukeboxDelegate? = nil, items: [JukeboxItem] = [JukeboxItem](), nowPlayingSetup: Bool = false)  {
         self.delegate = delegate
         super.init()
@@ -556,11 +556,11 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
      Get the item of the given identifier, if Jukebox has it.
      
      - parameters:
-        - identifier: id of the item.
+     - identifier: id of the item.
      - returns: nil, if no such item in the queue. Otherwise, return the wanted item.
      */
     public func item(ofIdentifier identifier: String) -> JukeboxItem? {
-        if let num = self.queuedItems.index(where: {$0.identifier == identifier}) {
+        if let num = self.queuedItems.firstIndex(where: {$0.identifier == identifier}) {
             return self.queuedItems[num]
         }
         
@@ -570,7 +570,7 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
     /**
      Return the track number with an assoicated playIndex. Track number is the index number of the queue items. When shuffle mode is off, this returns the `self.playIndex`. Otherwise, pre-generated track number, that is associated with the `index`, is returned.
      - parameters:
-        - index: an optional associated integer for getting the track number. `self.playIndex` is used, if it's nil.
+     - index: an optional associated integer for getting the track number. `self.playIndex` is used, if it's nil.
      - returns: a track number.
      */
     public func trackNumber(at index: Int? = nil) -> Int {
@@ -635,10 +635,10 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
     func jukeboxItemDidLoadPlayerItem(_ item: JukeboxItem) {
         delegate?.jukeboxDidLoadItem(self, item: item)
         
-        let trackNumber = queuedItems.index{$0 === item}
+        let trackNumber = queuedItems.firstIndex{$0 === item}
         
         guard let playItem = item.playerItem
-            , state == .loading && self.trackNumber() == trackNumber else {return}
+              , state == .loading && self.trackNumber() == trackNumber else {return}
         
         registerForPlayToEndNotification(withItem: playItem)
         startNewPlayer(forItem: item)
@@ -649,64 +649,64 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
     // MARK: Playback
     
     private func setupNowPlayingInfoCenter() {
-      DispatchQueue.main.async {
-        UIApplication.shared.beginReceivingRemoteControlEvents()
-        
-        MPRemoteCommandCenter.shared().playCommand.addTarget {
-          [weak self] event in
-          
-          self?.play()
-          return .success
-        }
-        
-        MPRemoteCommandCenter.shared().pauseCommand.addTarget {
-          [weak self] event in
-          
-          self?.pause()
-          return .success
-        }
-        MPRemoteCommandCenter.shared().nextTrackCommand.addTarget {
-          [weak self] event in
-          
-          self?.playNext()
-          return .success
-        }
-        MPRemoteCommandCenter.shared().previousTrackCommand.addTarget {
-          [weak self] event in
-          
-          self?.playPrevious()
-          return .success
-        }
-        
-        MPRemoteCommandCenter.shared().togglePlayPauseCommand.addTarget {
-          [weak self] event in
-          
-          if self?.state == .playing {
-            self?.pause()
-          } else {
-            self?.play()
-          }
-          
-          return .success
-        }
-        
-        if #available(iOS 9.1, *) {
-          MPRemoteCommandCenter.shared().changePlaybackPositionCommand.addTarget {
-            [weak self] event in
+        DispatchQueue.main.async {
+            UIApplication.shared.beginReceivingRemoteControlEvents()
             
-            var success = true
-            if let changeEvent = event as? MPChangePlaybackPositionCommandEvent {
-              DispatchQueue.main.async {
-                self?.seek(toSecond: Double(changeEvent.positionTime), shouldPlay: true)
-              }
-            } else {
-              success = false
+            MPRemoteCommandCenter.shared().playCommand.addTarget {
+                [weak self] event in
+                
+                self?.play()
+                return .success
             }
             
-            return success ? .success : .commandFailed
-          }
+            MPRemoteCommandCenter.shared().pauseCommand.addTarget {
+                [weak self] event in
+                
+                self?.pause()
+                return .success
+            }
+            MPRemoteCommandCenter.shared().nextTrackCommand.addTarget {
+                [weak self] event in
+                
+                self?.playNext()
+                return .success
+            }
+            MPRemoteCommandCenter.shared().previousTrackCommand.addTarget {
+                [weak self] event in
+                
+                self?.playPrevious()
+                return .success
+            }
+            
+            MPRemoteCommandCenter.shared().togglePlayPauseCommand.addTarget {
+                [weak self] event in
+                
+                if self?.state == .playing {
+                    self?.pause()
+                } else {
+                    self?.play()
+                }
+                
+                return .success
+            }
+            
+            if #available(iOS 9.1, *) {
+                MPRemoteCommandCenter.shared().changePlaybackPositionCommand.addTarget {
+                    [weak self] event in
+                    
+                    var success = true
+                    if let changeEvent = event as? MPChangePlaybackPositionCommandEvent {
+                        DispatchQueue.main.async {
+                            self?.seek(toSecond: Double(changeEvent.positionTime), shouldPlay: true)
+                        }
+                    } else {
+                        success = false
+                    }
+                    
+                    return success ? .success : .commandFailed
+                }
+            }
         }
-      }
     }
     
     public func updateInfoCenter() {
@@ -715,73 +715,73 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
             return
         }
         
-      DispatchQueue.main.async { [weak self] in
-        let currentTime = item.currentTime ?? 0
-        let duration = item.meta.duration ?? 0
-        let trackNumber = self?.playIndex
-        let trackCount = self?.queuedItems.count
-        
-        var title = item.meta.title
-        var artist = item.meta.artist
-        var album = item.meta.album
-        var artwork = item.meta.artwork
-        
-        if let customMetaData = item.customMetaData {
-          
-          if let str = customMetaData["title"] as? String {
-            title = str
-          }
-          
-          if let str = customMetaData["artist"] as? String {
-            artist = str
-          }
-          
-          if let str = customMetaData["album"] as? String {
-            album = str
-          }
-          
-          if let img = customMetaData["artwork"] as? UIImage {
-            artwork = img
-          }
+        DispatchQueue.main.async { [weak self] in
+            let currentTime = item.currentTime ?? 0
+            let duration = item.meta.duration ?? 0
+            let trackNumber = self?.playIndex
+            let trackCount = self?.queuedItems.count
+            
+            var title = item.meta.title
+            var artist = item.meta.artist
+            var album = item.meta.album
+            var artwork = item.meta.artwork
+            
+            if let customMetaData = item.customMetaData {
+                
+                if let str = customMetaData["title"] as? String {
+                    title = str
+                }
+                
+                if let str = customMetaData["artist"] as? String {
+                    artist = str
+                }
+                
+                if let str = customMetaData["album"] as? String {
+                    album = str
+                }
+                
+                if let img = customMetaData["artwork"] as? UIImage {
+                    artwork = img
+                }
+            }
+            
+            if let customTitle = item.customTitle, !customTitle.isEmpty {
+                title = customTitle
+            }
+            
+            var playbackRate = 0.0
+            
+            if self?.state == .playing {
+                playbackRate = 1.0
+            }
+            
+            var nowPlayingInfo : [String : Any] = [
+                MPMediaItemPropertyPlaybackDuration : duration,
+                MPNowPlayingInfoPropertyElapsedPlaybackTime : currentTime,
+                MPNowPlayingInfoPropertyPlaybackQueueCount :trackCount ?? 0,
+                MPNowPlayingInfoPropertyPlaybackQueueIndex : trackNumber ?? 0,
+                MPMediaItemPropertyMediaType : MPMediaType.anyAudio.rawValue,
+                MPNowPlayingInfoPropertyPlaybackRate: playbackRate
+            ]
+            
+            if title != nil {
+                nowPlayingInfo[MPMediaItemPropertyTitle] = title
+            }
+            
+            if artist != nil {
+                nowPlayingInfo[MPMediaItemPropertyArtist] = artist
+            }
+            
+            if album != nil {
+                nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = album
+            }
+            
+            if artwork != nil {
+                nowPlayingInfo[MPMediaItemPropertyArtwork] = MPMediaItemArtwork(image: artwork!)
+            }
+            
+            MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
         }
-        
-        if let customTitle = item.customTitle, !customTitle.isEmpty {
-          title = customTitle
-        }
-        
-        var playbackRate = 0.0
-        
-        if self?.state == .playing {
-          playbackRate = 1.0
-        }
-        
-        var nowPlayingInfo : [String : Any] = [
-          MPMediaItemPropertyPlaybackDuration : duration,
-          MPNowPlayingInfoPropertyElapsedPlaybackTime : currentTime,
-          MPNowPlayingInfoPropertyPlaybackQueueCount :trackCount,
-          MPNowPlayingInfoPropertyPlaybackQueueIndex : trackNumber,
-          MPMediaItemPropertyMediaType : MPMediaType.anyAudio.rawValue,
-          MPNowPlayingInfoPropertyPlaybackRate: playbackRate
-        ]
-        
-        if title != nil {
-          nowPlayingInfo[MPMediaItemPropertyTitle] = title
-        }
-        
-        if artist != nil {
-          nowPlayingInfo[MPMediaItemPropertyArtist] = artist
-        }
-        
-        if album != nil {
-          nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = album
-        }
-        
-        if artwork != nil {
-          nowPlayingInfo[MPMediaItemPropertyArtwork] = MPMediaItemArtwork(image: artwork!)
-        }
-        
-        MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
-      }
     }
     
     fileprivate func playCurrentItem(withAsset asset: AVAsset) {
@@ -902,10 +902,10 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
     // MARK: Progress tracking
     
     fileprivate func startProgressTimer(){
-      guard let player = player , player.currentItem?.duration.isValid == true else {return}
-      progressObserver = player.addPeriodicTimeObserver(forInterval: CMTimeMakeWithSeconds(0.05, Int32(NSEC_PER_SEC)), queue: nil, using: { [unowned self] (time : CMTime) -> Void in
-        self.timerAction()
-      }) as AnyObject
+        guard let player = player , player.currentItem?.duration.isValid == true else {return}
+        progressObserver = player.addPeriodicTimeObserver(forInterval: CMTimeMakeWithSeconds(0.05, preferredTimescale: Int32(NSEC_PER_SEC)), queue: nil, using: { [unowned self] (time : CMTime) -> Void in
+            self.timerAction()
+        }) as AnyObject
     }
     
     fileprivate func stopProgressTimer() {
@@ -921,19 +921,19 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
     fileprivate func configureBackgroundAudioTask() {
         backgroundIdentifier =  UIApplication.shared.beginBackgroundTask (expirationHandler: { () -> Void in
             UIApplication.shared.endBackgroundTask(self.backgroundIdentifier)
-            self.backgroundIdentifier = UIBackgroundTaskInvalid
+            self.backgroundIdentifier = UIBackgroundTaskIdentifier.invalid
         })
     }
     
     fileprivate func configureAudioSession() throws {
-      try AVAudioSession.sharedInstance().setCategory(AVAudioSessionCategoryPlayback)
-      try AVAudioSession.sharedInstance().setMode(AVAudioSessionModeDefault)
-      try AVAudioSession.sharedInstance().setActive(true)
+        try AVAudioSession.sharedInstance().setCategory(AVAudioSession.Category.playback)
+        try AVAudioSession.sharedInstance().setMode(AVAudioSession.Mode.default)
+        try AVAudioSession.sharedInstance().setActive(true)
     }
     
     fileprivate func configureObservers() {
-      NotificationCenter.default.addObserver(self, selector: #selector(Jukebox.handleStall), name: NSNotification.Name.AVPlayerItemPlaybackStalled, object: nil)
-      NotificationCenter.default.addObserver(self, selector: #selector(handleAudioSessionInterruption), name: NSNotification.Name.AVAudioSessionInterruption, object: AVAudioSession.sharedInstance())
+        NotificationCenter.default.addObserver(self, selector: #selector(Jukebox.handleStall), name: NSNotification.Name.AVPlayerItemPlaybackStalled, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(handleAudioSessionInterruption), name: AVAudioSession.interruptionNotification, object: AVAudioSession.sharedInstance())
     }
     
     // MARK:- Notifications -
@@ -942,7 +942,7 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
         guard let userInfo = notification.userInfo as? [String: AnyObject] else { return }
         guard let rawInterruptionType = userInfo[AVAudioSessionInterruptionTypeKey] as? NSNumber else { return }
         guard let interruptionType = AVAudioSession.InterruptionType(rawValue: rawInterruptionType.uintValue) else { return }
-
+        
         switch interruptionType {
         case .began: //interruption started
             //self.pause()
@@ -955,6 +955,8 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
                     self.delegate?.jukeboxDidEndInterruption(self)
                 }
             }
+        @unknown default:
+            debugPrint("Unknown default")
         }
     }
     
