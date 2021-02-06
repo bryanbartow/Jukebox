@@ -502,6 +502,14 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
         }
     }
     
+    open var playbackRate: Float = 0.0 {
+        didSet {
+            DispatchQueue.main.async { [weak self] in
+                self?.player?.rate = self?.playbackRate ?? 0.0
+            }
+        }
+    }
+    
     open var currentItem: JukeboxItem? {
         
         let trackNumber = self.trackNumber()
@@ -749,10 +757,10 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
                 title = customTitle
             }
             
-            var playbackRate = 0.0
+            var rateOfPlayback: Float = 0.0
             
             if self?.state == .playing {
-                playbackRate = 1.0
+                rateOfPlayback = self?.playbackRate ?? 1.0
             }
             
             var nowPlayingInfo : [String : Any] = [
@@ -761,7 +769,7 @@ open class Jukebox: NSObject, JukeboxItemDelegate {
                 MPNowPlayingInfoPropertyPlaybackQueueCount :trackCount ?? 0,
                 MPNowPlayingInfoPropertyPlaybackQueueIndex : trackNumber ?? 0,
                 MPMediaItemPropertyMediaType : MPMediaType.anyAudio.rawValue,
-                MPNowPlayingInfoPropertyPlaybackRate: playbackRate
+                MPNowPlayingInfoPropertyPlaybackRate: rateOfPlayback
             ]
             
             if title != nil {
